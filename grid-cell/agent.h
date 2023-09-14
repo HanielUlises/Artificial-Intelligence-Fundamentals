@@ -11,15 +11,21 @@
 class Agent {
 public:
     Agent(SDL_Renderer* renderer, int size, int gridSize, int initialX, int initialY);
+    bool isObstacle();
+    bool isObject();
+
     void moveRandomly();
     void move();
+    void stopMoving();
     void draw();
     void initMatrix();
     
     // Uhmmm
-    bool moving;
+    
 private:
     SDL_Renderer* renderer;
+
+    bool isMoving;
 
     int gridMatrix[16][16];
     int x, y;

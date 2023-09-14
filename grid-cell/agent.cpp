@@ -52,6 +52,9 @@ void Agent::move() {
         y = y + dy;
     }
 }
+void Agent::stopMoving(){
+    !isMoving;
+}
 
 void Agent::draw() {
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); // Red color
@@ -113,8 +116,8 @@ void windowDisplay() {
             }
             else if (e.type == SDL_KEYDOWN) {
                 if (e.key.keysym.sym == SDLK_SPACE) {
-                    object1.moving = !object1.moving;
-                    object2.moving = !object2.moving;
+                    object1.stopMoving();
+                    object2.stopMoving();
                 }
             }
         }
