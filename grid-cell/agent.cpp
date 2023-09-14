@@ -63,9 +63,10 @@ void Agent::draw() {
 }
 
 void Agent::initMatrix() {
+    // Local matrix that tracks the current position of a given object in the 16x16 grid
     int localMatrix[3][3] = {
         {gridMatrix[x - 1][y - 1], gridMatrix[x][y - 1], gridMatrix[x + 1][y - 1]},
-        {gridMatrix[x - 1][y], gridMatrix[x][y], gridMatrix[x + 1][y]},
+        {gridMatrix[x - 1][y]    , gridMatrix[x][y]    , gridMatrix[x + 1][y]},
         {gridMatrix[x - 1][y + 1], gridMatrix[x][y + 1], gridMatrix[x + 1][y + 1]}
     };
 }
