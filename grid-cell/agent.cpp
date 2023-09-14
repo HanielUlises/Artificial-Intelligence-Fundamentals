@@ -5,7 +5,7 @@ const int SCREEN_HEIGHT = 800;
 const int GRID_SIZE = 16;
 const int CELL_SIZE = SCREEN_WIDTH / GRID_SIZE;
 
-Agent::Agent(SDL_Renderer* renderer, int size, int gridSize, int initialX, int initialY) :
+Agent::Agent(SDL_Renderer *renderer, int size, int gridSize, int initialX, int initialY) :
     renderer(renderer),
     size(size),
     gridSize(gridSize),
@@ -59,7 +59,16 @@ void Agent::draw() {
     SDL_RenderFillRect(renderer, &rect);
 }
 
-void drawGrid(SDL_Renderer* renderer) {
+void Agent::initMatrix() {
+    int localMatrix[3][3] = {
+        {gridMatrix[x - 1][y - 1], gridMatrix[x][y - 1], gridMatrix[x + 1][y - 1]},
+        {gridMatrix[x - 1][y], gridMatrix[x][y], gridMatrix[x + 1][y]},
+        {gridMatrix[x - 1][y + 1], gridMatrix[x][y + 1], gridMatrix[x + 1][y + 1]}
+    };
+}
+
+
+void drawGrid(SDL_Renderer *renderer) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Set color to black
 
     // Vertical lines
@@ -93,7 +102,6 @@ void windowDisplay() {
 
     Agent object1(renderer, CELL_SIZE, GRID_SIZE, initialX1, initialY1);
     Agent object2(renderer, CELL_SIZE, GRID_SIZE, initialX2, initialY2);
-
 
     auto lastMoveTime = std::chrono::high_resolution_clock::now();
     const double moveInterval = 0.2; // Move every [amount] of secondsss
