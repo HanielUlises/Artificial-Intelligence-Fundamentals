@@ -1,26 +1,24 @@
 #pragma once
 
-#include <SDL.h>
+#include "SDL.h"
 
-#include <vector>
-#include <cstdlib>
-#include <ctime>
-#include <chrono>
-#include <thread>
+#include "iostream"
+#include "cstdlib"
+#include "ctime"
+#include "chrono"
+#include "thread"
 
 class Agent {
 public:
     Agent(SDL_Renderer* renderer, int size, int gridSize, int initialX, int initialY);
     bool isObstacle();
-    bool isObject();
+    bool isSample();
 
     void moveRandomly();
     void move();
     void stopMoving();
     void draw();
     void initMatrix();
-    
-    // Uhmmm
     
 private:
     SDL_Renderer* renderer;

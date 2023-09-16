@@ -5,7 +5,7 @@ const int SCREEN_HEIGHT = 800;
 const int GRID_SIZE = 16;
 const int CELL_SIZE = SCREEN_WIDTH / GRID_SIZE;
 
-Agent::Agent(SDL_Renderer *renderer, int size, int gridSize, int initialX, int initialY) :
+Agent::Agent(SDL_Renderer* renderer, int size, int gridSize, int initialX, int initialY) :
     renderer(renderer),
     size(size),
     gridSize(gridSize),
@@ -13,16 +13,39 @@ Agent::Agent(SDL_Renderer *renderer, int size, int gridSize, int initialX, int i
     y(initialY) {
     dx = (rand() % 3 - 1) * CELL_SIZE; // Random initial velocity
     dy = (rand() % 3 - 1) * CELL_SIZE;
-    moving = true; // Object starts moving initially
+    isMoving = true; // Object starts moving initially
+
+    for (int i = 0; i < 15; i++) {
+        for (int j = 0; j < 15; j++) {
+            gridMatrix[i][j] = 0;
+        }
+    }
 }
 
 void Agent::moveRandomly() {
-    dx = (rand() % 3 - 1) * CELL_SIZE; // Adjust the velocity randomly
-    dy = (rand() % 3 - 1) * CELL_SIZE;
+    int possibleDirections[4][2] = {
+        {-CELL_SIZE, 0},  // Move left
+        {CELL_SIZE, 0},   // Move right
+        {0, -CELL_SIZE},  // Move up
+        {0, CELL_SIZE}    // Move down
+    };
+
+    // Randomly select either horizontal or vertical direction
+    int randomIndex = rand() % 2;
+    if (randomIndex == 0) {
+        // Horizontal direction
+        dx = possibleDirections[rand() % 2][0];
+        dy = 0;
+    }
+    else {
+        // Vertical direction
+        dx = 0;
+        dy = possibleDirections[rand() % 2 + 2][1];
+    }
 }
 
 void Agent::move() {
-    if (!moving) {
+    if (!isMoving) {
         return; // If not moving, do nothing
     }
 
@@ -52,8 +75,9 @@ void Agent::move() {
         y = y + dy;
     }
 }
+
 void Agent::stopMoving(){
-    !isMoving;
+    isMoving = !isMoving;
 }
 
 void Agent::draw() {
@@ -108,7 +132,7 @@ void windowDisplay() {
     Agent object2(renderer, CELL_SIZE, GRID_SIZE, initialX2, initialY2);
 
     auto lastMoveTime = std::chrono::high_resolution_clock::now();
-    const double moveInterval = 0.2; // Move every [amount] of secondsss
+    const double moveInterval = 0.5; // Move every [amount] of secondsss
 
     while (!quit) {
         while (SDL_PollEvent(&e) != 0) {
@@ -119,6 +143,9 @@ void windowDisplay() {
                 if (e.key.keysym.sym == SDLK_SPACE) {
                     object1.stopMoving();
                     object2.stopMoving();
+                }
+                if (e.key.keysym.sym == SDLK_ESCAPE) {
+                    quit = !quit;
                 }
             }
         }
