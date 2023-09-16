@@ -18,7 +18,8 @@ public:
     void move();
     void stopMoving();
     void draw();
-    void initMatrix();
+
+    int** initMatrix();
     
 private:
     SDL_Renderer* renderer;
@@ -26,7 +27,9 @@ private:
     bool isMoving;
 
     int gridMatrix[16][16];
+    // Positions
     int x, y;
+    // Directions (movement)
     int dx, dy;
     int size;
     int gridSize;

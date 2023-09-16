@@ -23,25 +23,30 @@ Agent::Agent(SDL_Renderer* renderer, int size, int gridSize, int initialX, int i
 }
 
 void Agent::moveRandomly() {
-    int possibleDirections[4][2] = {
-        {-CELL_SIZE, 0},  // Move left
-        {CELL_SIZE, 0},   // Move right
-        {0, -CELL_SIZE},  // Move up
-        {0, CELL_SIZE}    // Move down
+    // Matrix that determines the allowed movements of the object
+    int movingMatrix[3][3] = {
+        {0, 1, 0},
+        {1, 0, 1},
+        {0, 1 ,0}
     };
+    // Matrix based on the position of a given object within the GRIDDDD
+    int **posMatrix = initMatrix();
 
-    // Randomly select either horizontal or vertical direction
-    int randomIndex = rand() % 2;
-    if (randomIndex == 0) {
-        // Horizontal direction
-        dx = possibleDirections[rand() % 2][0];
-        dy = 0;
+    // This gives the (posible) positions for an object, restricting the not allowed movements
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            posMatrix[i][j] *= movingMatrix[i][j];
+        }
     }
-    else {
-        // Vertical direction
-        dx = 0;
-        dy = possibleDirections[rand() % 2 + 2][1];
+
+    dx = posMatrix[rand() % 3 + 1][rand() % 3 + 1];
+    dy = posMatrix[rand() % 3 + 1][rand() % 3 + 1];
+
+    // Freeing the memory of the array
+    for (int i = 0; i < 3; i++) {
+        delete[] posMatrix[i];
     }
+    delete[] posMatrix;
 }
 
 void Agent::move() {
@@ -54,6 +59,7 @@ void Agent::move() {
 
     // Check for collision with the window boundaries
     if (nextX >= 0 && nextX < SCREEN_WIDTH && nextY >= 0 && nextY < SCREEN_HEIGHT) {
+        // Next position updated
         x = nextX;
         y = nextY;
     }
@@ -86,13 +92,19 @@ void Agent::draw() {
     SDL_RenderFillRect(renderer, &rect);
 }
 
-void Agent::initMatrix() {
+int** Agent::initMatrix() {
     // Local matrix that tracks the current position of a given object in the 16x16 grid
-    int localMatrix[3][3] = {
-        {gridMatrix[x - 1][y - 1], gridMatrix[x][y - 1], gridMatrix[x + 1][y - 1]},
-        {gridMatrix[x - 1][y]    , gridMatrix[x][y]    , gridMatrix[x + 1][y]},
-        {gridMatrix[x - 1][y + 1], gridMatrix[x][y + 1], gridMatrix[x + 1][y + 1]}
-    };
+    int** localMatrix = new int* [3];
+
+    for (int i = 0; i < 3; i++) {
+        localMatrix[i] = new int[3];
+        for (int j = 0; j < 3; j++) {
+            // Tracking the current position
+            localMatrix[i][j] = gridMatrix[x - 1 + i][y - 1 + j];
+        }
+    }
+
+    return localMatrix;
 }
 
 
