@@ -10,7 +10,7 @@
 
 class Agent {
 public:
-    Agent(SDL_Renderer* renderer, int size, int gridSize, int initialX, int initialY);
+    Agent(SDL_Renderer* renderer, int size, int gridSize, int initialX, int initialY, int redColor, int blueColor, int greenColor);
     bool isObstacle();
     bool isSample();
 
@@ -20,6 +20,9 @@ public:
     void draw();
 
     int** initMatrix();
+
+    // Object color
+    int redColor, blueColor, greenColor;
     
 private:
     SDL_Renderer* renderer;
@@ -31,10 +34,12 @@ private:
     int x, y;
     // Directions (movement)
     int dx, dy;
+    // Tile size
     int size;
+    // Grid size
     int gridSize;
-  
+    
 };
 
-void drawGrid();
+void drawGrid(SDL_Renderer* renderer, int redColor, int blueColor, int greenColor);
 void windowDisplay();

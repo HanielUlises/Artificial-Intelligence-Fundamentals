@@ -5,18 +5,21 @@ const int SCREEN_HEIGHT = 800;
 const int GRID_SIZE = 16;
 const int CELL_SIZE = SCREEN_WIDTH / GRID_SIZE;
 
-Agent::Agent(SDL_Renderer* renderer, int size, int gridSize, int initialX, int initialY) :
+Agent::Agent(SDL_Renderer* renderer, int size, int gridSize, int initialX, int initialY, int redColor, int blueColor, int greenColor) :
     renderer(renderer),
     size(size),
     gridSize(gridSize),
+    redColor(redColor),
+    blueColor(blueColor),
+    greenColor(greenColor),
     x(initialX),
     y(initialY) {
     dx = (rand() % 3 - 1) * CELL_SIZE; // Random initial velocity
     dy = (rand() % 3 - 1) * CELL_SIZE;
     isMoving = true; // Object starts moving initially
 
-    for (int i = 0; i < 15; i++) {
-        for (int j = 0; j < 15; j++) {
+    for (int i = 0; i < 16; i++) {
+        for (int j = 0; j < 16; j++) {
             gridMatrix[i][j] = 0;
         }
     }
@@ -87,7 +90,7 @@ void Agent::stopMoving(){
 }
 
 void Agent::draw() {
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); // Red color
+    SDL_SetRenderDrawColor(renderer, redColor, blueColor, greenColor, 255);
     SDL_Rect rect = { x, y, size, size };
     SDL_RenderFillRect(renderer, &rect);
 }
@@ -106,7 +109,6 @@ int** Agent::initMatrix() {
 
     return localMatrix;
 }
-
 
 void drawGrid(SDL_Renderer *renderer) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Set color to black
@@ -140,8 +142,8 @@ void windowDisplay() {
     int initialX2 = 200;
     int initialY2 = 200;
 
-    Agent object1(renderer, CELL_SIZE, GRID_SIZE, initialX1, initialY1);
-    Agent object2(renderer, CELL_SIZE, GRID_SIZE, initialX2, initialY2);
+    Agent object1(renderer, CELL_SIZE, GRID_SIZE, initialX1, initialY1, 255, 0, 0); // Red color
+    Agent object2(renderer, CELL_SIZE, GRID_SIZE, initialX2, initialY2, 0, 0, 255); // Blue color
 
     auto lastMoveTime = std::chrono::high_resolution_clock::now();
     const double moveInterval = 0.5; // Move every [amount] of secondsss
