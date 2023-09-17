@@ -16,7 +16,7 @@ Agent::Agent(SDL_Renderer* renderer, int size, int gridSize, int initialX, int i
     y(initialY) {
     dx = (rand() % 3 - 1) * CELL_SIZE; // Random initial velocity
     dy = (rand() % 3 - 1) * CELL_SIZE;
-    isMoving = true; // Object starts moving initially
+    isMoving = false; // Objects static initially (escape for start moving)
 
     for (int i = 0; i < 16; i++) {
         for (int j = 0; j < 16; j++) {
@@ -70,15 +70,42 @@ void Agent::move() {
     }
 }
 
-void Agent::stopMoving(){
+void Agent::stopMoving() {
     isMoving = !isMoving;
 }
 
 void Agent::draw() {
-    SDL_SetRenderDrawColor(renderer, redColor, blueColor, greenColor, 255);
+    if (isObstacle()) {
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    }
+    else {
+        SDL_SetRenderDrawColor(renderer, redColor, blueColor, greenColor, 255);
+    }
+
     SDL_Rect rect = { x, y, size, size };
     SDL_RenderFillRect(renderer, &rect);
 }
+
+void Agent::placeObstacle(int x, int y) {
+    // Grid position based on mouse click coordinates
+    int gridX = x / CELL_SIZE;
+    int gridY = y / CELL_SIZE;
+
+    obstacles.push_back(std::make_pair(gridX, gridY));
+
+    // Grid matrix marks the obstacle position in the grid
+    gridMatrix[gridX][gridY] = 1;
+}
+
+bool Agent::isObstacle() {
+    // Grid position based on the object's coordinates
+    int gridX = x / CELL_SIZE;
+    int gridY = y / CELL_SIZE;
+
+    // Check if the current grid position is marked as an obstacle in the gridMatrix
+    return gridMatrix[gridX][gridY] == 1;
+}
+
 
 int** Agent::initMatrix() {
     // Local matrix that tracks the current position of a given object in the 16x16 grid
@@ -95,8 +122,8 @@ int** Agent::initMatrix() {
     return localMatrix;
 }
 
-void drawGrid(SDL_Renderer *renderer) {
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Set color to black
+void drawGrid(SDL_Renderer* renderer) {
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
     // Vertical lines
     for (int i = 1; i < GRID_SIZE; ++i) {
@@ -123,6 +150,12 @@ void handleEvents(SDL_Event& e, Agent& object1, Agent& object2, bool& quit) {
             }
             if (e.key.keysym.sym == SDLK_ESCAPE) {
                 quit = !quit;
+            }
+        }
+        else if (e.type == SDL_MOUSEBUTTONDOWN) {
+            if (e.button.button == SDL_BUTTON_LEFT) {
+                // Place an obstacle at the mouse click position
+                object1.placeObstacle(e.button.x, e.button.y);
             }
         }
     }
@@ -152,7 +185,7 @@ void runProgram() {
     const double moveInterval = 0.1; // Move every [amount] of seconds
 
     while (!quit) {
-        handleEvents(e, object1, object2, quit); // Call handleEvents to handle SDL events
+        handleEvents(e, object1, object2, quit); // A classic one 
 
         auto currentTime = std::chrono::high_resolution_clock::now();
         double elapsedSeconds = std::chrono::duration<double>(currentTime - lastMoveTime).count();

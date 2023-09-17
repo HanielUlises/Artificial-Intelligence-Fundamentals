@@ -2,6 +2,7 @@
 
 #include "SDL.h"
 
+#include "vector"
 #include "iostream"
 #include "cstdlib"
 #include "ctime"
@@ -13,6 +14,9 @@ public:
     Agent(SDL_Renderer* renderer, int size, int gridSize, int initialX, int initialY, int redColor, int blueColor, int greenColor);
     bool isObstacle();
     bool isSample();
+
+    void placeObstacle(int x, int y);
+
     void move();
     void stopMoving();
     void draw();
@@ -21,8 +25,10 @@ public:
 
     // Object color
     int redColor, blueColor, greenColor;
-    
+
 private:
+    std::vector<std::pair<int, int>> obstacles;
+
     SDL_Renderer* renderer;
 
     bool isMoving;
@@ -36,7 +42,7 @@ private:
     int size;
     // Grid size
     int gridSize;
-    
+
 };
 
 void drawGrid(SDL_Renderer* renderer, int redColor, int blueColor, int greenColor);
