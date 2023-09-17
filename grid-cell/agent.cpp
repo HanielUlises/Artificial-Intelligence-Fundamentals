@@ -1,10 +1,5 @@
 #include "agent.h"
 
-const int SCREEN_WIDTH = 800;
-const int SCREEN_HEIGHT = 800;
-const int GRID_SIZE = 16;
-const int CELL_SIZE = SCREEN_WIDTH / GRID_SIZE;
-
 Agent::Agent(SDL_Renderer* renderer, int size, int gridSize, int initialX, int initialY, const std::string& imagePath) :
     renderer(renderer),
     size(size),
@@ -170,6 +165,20 @@ void handleEvents(SDL_Event& e, Agent& object1, Agent& object2, bool& quit) {
     }
 }
 
+void moveAgent(Agent& agent, const double moveInterval, std::atomic<bool>& quit) {
+    auto lastMoveTime = std::chrono::high_resolution_clock::now();
+
+    while (!quit) {
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        double elapsedSeconds = std::chrono::duration<double>(currentTime - lastMoveTime).count();
+
+        if (elapsedSeconds >= moveInterval) {
+            agent.move();
+            lastMoveTime = currentTime;
+        }
+    }
+}
+
 void runProgram() {
     SDL_Init(SDL_INIT_VIDEO);
     SDL_Window* window = SDL_CreateWindow("Reactive Agents", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
@@ -193,8 +202,15 @@ void runProgram() {
     Agent object1(renderer, CELL_SIZE, GRID_SIZE, initialX1, initialY1, "images/agente1.png"); // Load agent1.png
     Agent object2(renderer, CELL_SIZE, GRID_SIZE, initialX2, initialY2, "images/agente2.png"); // Load agent2.png
 
+    std::atomic<bool> quitThreads(false);
+
     auto lastMoveTime = std::chrono::high_resolution_clock::now();
     const double moveInterval = 0.1; // Move every [amount] of seconds
+
+    // Different threads for each object
+
+    std::thread thread1(&Agent::move, std::ref(object1));
+    std::thread thread2(&Agent::move, std::ref(object2));
 
     while (!quit) {
         handleEvents(e, object1, object2, quit); // A classic one 
@@ -208,7 +224,7 @@ void runProgram() {
             lastMoveTime = currentTime;
         }
 
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // Set color to white
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // Background color
         SDL_RenderClear(renderer); // Clear the screen
 
         drawGrid(renderer); // Draw the grid
@@ -218,7 +234,12 @@ void runProgram() {
 
         SDL_RenderPresent(renderer); // Update the screen
 
+        SDL_Delay(10);
     }
+
+    quitThreads = true;
+    thread1.join();
+    thread2.join();
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
