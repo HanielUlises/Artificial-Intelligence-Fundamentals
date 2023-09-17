@@ -13,8 +13,6 @@ public:
     Agent(SDL_Renderer* renderer, int size, int gridSize, int initialX, int initialY, int redColor, int blueColor, int greenColor);
     bool isObstacle();
     bool isSample();
-
-    void moveRandomly();
     void move();
     void stopMoving();
     void draw();

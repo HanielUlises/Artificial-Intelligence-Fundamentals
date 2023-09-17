@@ -25,63 +25,48 @@ Agent::Agent(SDL_Renderer* renderer, int size, int gridSize, int initialX, int i
     }
 }
 
-void Agent::moveRandomly() {
-    // Matrix that determines the allowed movements of the object
-    int movingMatrix[3][3] = {
-        {0, 1, 0},
-        {1, 0, 1},
-        {0, 1 ,0}
-    };
-    // Matrix based on the position of a given object within the GRIDDDD
-    int **posMatrix = initMatrix();
-
-    // This gives the (posible) positions for an object, restricting the not allowed movements
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            posMatrix[i][j] *= movingMatrix[i][j];
-        }
-    }
-
-    dx = posMatrix[rand() % 3 + 1][rand() % 3 + 1];
-    dy = posMatrix[rand() % 3 + 1][rand() % 3 + 1];
-
-    // Freeing the memory of the array
-    for (int i = 0; i < 3; i++) {
-        delete[] posMatrix[i];
-    }
-    delete[] posMatrix;
-}
-
 void Agent::move() {
     if (!isMoving) {
         return; // If not moving, do nothing
     }
 
-    int nextX = x + dx;
-    int nextY = y + dy;
+    // Matrix that determines the allowed movements of the object
+    int movingMatrix[3][3] = {
+        {1, 1, 1},
+        {1, 0, 1},
+        {1, 1, 1}
+    };
 
-    // Check for collision with the window boundaries
-    if (nextX >= 0 && nextX < SCREEN_WIDTH && nextY >= 0 && nextY < SCREEN_HEIGHT) {
-        // Next position updated
-        x = nextX;
-        y = nextY;
+    int randomDirection = rand() % 4; // 0: up, 1: down, 2: left, 3: right
+
+    int new_dx = 0;
+    int new_dy = 0;
+
+    if (randomDirection == 0) { // Up
+        new_dy = -CELL_SIZE;
     }
-    else {
-        // Object is out of bounds, bounce off the walls
+    else if (randomDirection == 1) { // Down
+        new_dy = CELL_SIZE;
+    }
+    else if (randomDirection == 2) { // Left
+        new_dx = -CELL_SIZE;
+    }
+    else if (randomDirection == 3) { // Right
+        new_dx = CELL_SIZE;
+    }
 
-        // Check for horizontal wall collision
-        if (nextX < 0 || nextX >= SCREEN_WIDTH) {
-            dx = -dx; // Reverse the horizontal velocity to bounce
+    int nextX = x + new_dx;
+    int nextY = y + new_dy;
+
+    // Check if the movement is allowed based on the matrix
+    if (nextX >= 0 && nextX < SCREEN_WIDTH && nextY >= 0 && nextY < SCREEN_HEIGHT) {
+        if (movingMatrix[1 + new_dx / CELL_SIZE][1 + new_dy / CELL_SIZE]) {
+            // Update position based on the allowed movement
+            x = nextX;
+            y = nextY;
+            dx = new_dx;
+            dy = new_dy;
         }
-
-        // Check for vertical wall collision
-        if (nextY < 0 || nextY >= SCREEN_HEIGHT) {
-            dy = -dy; // Reverse the vertical velocity to bounce
-        }
-
-        // Update the position after bouncing
-        x = x + dx;
-        y = y + dy;
     }
 }
 
@@ -146,7 +131,7 @@ void windowDisplay() {
     Agent object2(renderer, CELL_SIZE, GRID_SIZE, initialX2, initialY2, 0, 0, 255); // Blue color
 
     auto lastMoveTime = std::chrono::high_resolution_clock::now();
-    const double moveInterval = 0.5; // Move every [amount] of secondsss
+    const double moveInterval = 0.1; // Move every [amount] of secondsss
 
     while (!quit) {
         while (SDL_PollEvent(&e) != 0) {
