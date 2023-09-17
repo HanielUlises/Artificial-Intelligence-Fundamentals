@@ -40,4 +40,5 @@ private:
 };
 
 void drawGrid(SDL_Renderer* renderer, int redColor, int blueColor, int greenColor);
-void windowDisplay();
+void handleEvents();
+void runProgram();

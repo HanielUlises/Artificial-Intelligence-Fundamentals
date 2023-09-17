@@ -32,9 +32,9 @@ void Agent::move() {
 
     // Matrix that determines the allowed movements of the object
     int movingMatrix[3][3] = {
-        {1, 1, 1},
+        {0, 1, 0},
         {1, 0, 1},
-        {1, 1, 1}
+        {0, 1, 0}
     };
 
     int randomDirection = rand() % 4; // 0: up, 1: down, 2: left, 3: right
@@ -111,7 +111,25 @@ void drawGrid(SDL_Renderer *renderer) {
     }
 }
 
-void windowDisplay() {
+void handleEvents(SDL_Event& e, Agent& object1, Agent& object2, bool& quit) {
+    while (SDL_PollEvent(&e) != 0) {
+        if (e.type == SDL_QUIT) {
+            quit = true;
+        }
+        else if (e.type == SDL_KEYDOWN) {
+            if (e.key.keysym.sym == SDLK_SPACE) {
+                object1.stopMoving();
+                object2.stopMoving();
+            }
+            if (e.key.keysym.sym == SDLK_ESCAPE) {
+                quit = !quit;
+            }
+        }
+    }
+}
+
+
+void runProgram() {
     SDL_Init(SDL_INIT_VIDEO);
     SDL_Window* window = SDL_CreateWindow("Moving Objects", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
@@ -131,23 +149,10 @@ void windowDisplay() {
     Agent object2(renderer, CELL_SIZE, GRID_SIZE, initialX2, initialY2, 0, 0, 255); // Blue color
 
     auto lastMoveTime = std::chrono::high_resolution_clock::now();
-    const double moveInterval = 0.1; // Move every [amount] of secondsss
+    const double moveInterval = 0.1; // Move every [amount] of seconds
 
     while (!quit) {
-        while (SDL_PollEvent(&e) != 0) {
-            if (e.type == SDL_QUIT) {
-                quit = true;
-            }
-            else if (e.type == SDL_KEYDOWN) {
-                if (e.key.keysym.sym == SDLK_SPACE) {
-                    object1.stopMoving();
-                    object2.stopMoving();
-                }
-                if (e.key.keysym.sym == SDLK_ESCAPE) {
-                    quit = !quit;
-                }
-            }
-        }
+        handleEvents(e, object1, object2, quit); // Call handleEvents to handle SDL events
 
         auto currentTime = std::chrono::high_resolution_clock::now();
         double elapsedSeconds = std::chrono::duration<double>(currentTime - lastMoveTime).count();
