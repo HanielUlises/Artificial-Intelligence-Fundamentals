@@ -5,23 +5,31 @@ const int SCREEN_HEIGHT = 800;
 const int GRID_SIZE = 16;
 const int CELL_SIZE = SCREEN_WIDTH / GRID_SIZE;
 
-Agent::Agent(SDL_Renderer* renderer, int size, int gridSize, int initialX, int initialY, int redColor, int blueColor, int greenColor) :
+Agent::Agent(SDL_Renderer* renderer, int size, int gridSize, int initialX, int initialY, const std::string& imagePath) :
     renderer(renderer),
     size(size),
     gridSize(gridSize),
-    redColor(redColor),
-    blueColor(blueColor),
-    greenColor(greenColor),
     x(initialX),
     y(initialY) {
-    dx = (rand() % 3 - 1) * CELL_SIZE; // Random initial velocity
+    dx = (rand() % 3 - 1) * CELL_SIZE;
     dy = (rand() % 3 - 1) * CELL_SIZE;
-    isMoving = false; // Objects static initially (escape for start moving)
+    isMoving = false;
 
     for (int i = 0; i < 16; i++) {
         for (int j = 0; j < 16; j++) {
             gridMatrix[i][j] = 0;
         }
+    }
+
+    // Load the image as a texture
+    SDL_Surface* imageSurface = IMG_Load(imagePath.c_str());
+    if (imageSurface == nullptr) {
+        std::cerr << "Failed to load image: " << IMG_GetError() << std::endl;
+    }
+    else {
+        // Create a texture from the loaded image
+        texture = SDL_CreateTextureFromSurface(renderer, imageSurface);
+        SDL_FreeSurface(imageSurface); // Free the surface as it's no longer needed:)
     }
 }
 
@@ -68,6 +76,7 @@ void Agent::move() {
             dy = new_dy;
         }
     }
+    
 }
 
 void Agent::stopMoving() {
@@ -75,15 +84,16 @@ void Agent::stopMoving() {
 }
 
 void Agent::draw() {
+    // Black walls
     if (isObstacle()) {
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     }
+    // Rendering the objects
     else {
-        SDL_SetRenderDrawColor(renderer, redColor, blueColor, greenColor, 255);
-    }
 
-    SDL_Rect rect = { x, y, size, size };
-    SDL_RenderFillRect(renderer, &rect);
+        SDL_Rect rect = { x, y, size, size };
+        SDL_RenderCopy(renderer, texture, nullptr, &rect);
+    }
 }
 
 void Agent::placeObstacle(int x, int y) {
@@ -105,7 +115,6 @@ bool Agent::isObstacle() {
     // Check if the current grid position is marked as an obstacle in the gridMatrix
     return gridMatrix[gridX][gridY] == 1;
 }
-
 
 int** Agent::initMatrix() {
     // Local matrix that tracks the current position of a given object in the 16x16 grid
@@ -161,25 +170,28 @@ void handleEvents(SDL_Event& e, Agent& object1, Agent& object2, bool& quit) {
     }
 }
 
-
 void runProgram() {
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_Window* window = SDL_CreateWindow("Moving Objects", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+    SDL_Window* window = SDL_CreateWindow("Reactive Agents", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-    bool quit = false;
+    if (!IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG) {
+        std::cout << "Failed to initialize image" << IMG_GetError() <<std::endl;
+    }
+
+    bool quit = false;  
     SDL_Event e;
 
     srand(static_cast<unsigned>(time(nullptr)));
 
-    // Specify initial positions for object1 and object2
+    // Specifies the initial positions for object1 and object2
     int initialX1 = 100;
     int initialY1 = 100;
     int initialX2 = 200;
     int initialY2 = 200;
 
-    Agent object1(renderer, CELL_SIZE, GRID_SIZE, initialX1, initialY1, 255, 0, 0); // Red color
-    Agent object2(renderer, CELL_SIZE, GRID_SIZE, initialX2, initialY2, 0, 0, 255); // Blue color
+    Agent object1(renderer, CELL_SIZE, GRID_SIZE, initialX1, initialY1, "images/agente1.png"); // Load agent1.png
+    Agent object2(renderer, CELL_SIZE, GRID_SIZE, initialX2, initialY2, "images/agente2.png"); // Load agent2.png
 
     auto lastMoveTime = std::chrono::high_resolution_clock::now();
     const double moveInterval = 0.1; // Move every [amount] of seconds
@@ -205,6 +217,7 @@ void runProgram() {
         object2.draw();
 
         SDL_RenderPresent(renderer); // Update the screen
+
     }
 
     SDL_DestroyRenderer(renderer);
