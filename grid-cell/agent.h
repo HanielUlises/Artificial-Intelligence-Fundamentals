@@ -21,14 +21,14 @@ public:
     Agent(SDL_Renderer* renderer, int size, int gridSize, int initialX, int initialY, const std::string& imagePath);
     bool isObstacle();
     bool isSample();
-
-    void placeObstacle(int x, int y);
-
-    void move();
+  
+    void move(int gridMatrix[][GRID_SIZE]);
     void stopMoving();
-    void draw();
+    void draw();   
 
     int** initMatrix();
+    int* getX();
+    int* getY();
 
 private:
     std::vector<std::pair<int, int>> obstacles;
@@ -40,8 +40,6 @@ private:
     bool isMoving;
     // Counter of the samples recovered by the agents
     bool hasObject = false;
-
-    int gridMatrix[GRID_SIZE][GRID_SIZE];
     // Positions
     int x, y;
     // Directions (movement)
@@ -53,6 +51,7 @@ private:
    
 };
 
-void drawGrid(SDL_Renderer* renderer);
-void handleEvents(SDL_Event& e, Agent& object1, Agent& object2, bool& quit);
+void drawObstacles(SDL_Renderer* renderer, const std::vector<std::pair<int, int>>& obstacles, int size, int gridMatrix[][GRID_SIZE]);
+void handleEvents(SDL_Event& e, std::vector<std::pair<int, int>>& obstacles, Agent& object1, Agent& object2, bool& quit);
+void handleMouseClick(SDL_Event& e, std::vector<std::pair<int, int>>& obstacles);
 void runProgram();
