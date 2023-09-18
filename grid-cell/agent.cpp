@@ -1,5 +1,7 @@
 #include "agent.h"
 
+int gridMatrix[GRID_SIZE][GRID_SIZE] = { 0 };
+
 Agent::Agent(SDL_Renderer* renderer, int size, int gridSize, int initialX, int initialY, const std::string& imagePath) :
     renderer(renderer),
     size(size),
@@ -28,7 +30,7 @@ Agent::Agent(SDL_Renderer* renderer, int size, int gridSize, int initialX, int i
     }
 }
 
-void Agent::move() {
+void Agent::move(int gridMatrix[][GRID_SIZE]) {
     if (!isMoving) {
         return; // If not moving, do nothing
     }
@@ -61,17 +63,23 @@ void Agent::move() {
     int nextX = x + new_dx;
     int nextY = y + new_dy;
 
+    // Calculate the grid position of the [potential] next position
+    int gridX = nextX / CELL_SIZE;
+    int gridY = nextY / CELL_SIZE;
+
     // Check if the movement is allowed based on the matrix
     if (nextX >= 0 && nextX < SCREEN_WIDTH && nextY >= 0 && nextY < SCREEN_HEIGHT) {
         if (movingMatrix[1 + new_dx / CELL_SIZE][1 + new_dy / CELL_SIZE]) {
-            // Update position based on the allowed movement
-            x = nextX;
-            y = nextY;
-            dx = new_dx;
-            dy = new_dy;
+            // Check if the intended next position is not blocked by an obstacle
+            if (gridMatrix[gridX][gridY] != 1) {
+                // Update position based on the allowed movement
+                x = nextX;
+                y = nextY;
+                dx = new_dx;
+                dy = new_dy;
+            }
         }
     }
-    
 }
 
 void Agent::stopMoving() {
@@ -79,27 +87,9 @@ void Agent::stopMoving() {
 }
 
 void Agent::draw() {
-    // Black walls
-    if (isObstacle()) {
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    }
-    // Rendering the objects
-    else {
-
-        SDL_Rect rect = { x, y, size, size };
-        SDL_RenderCopy(renderer, texture, nullptr, &rect);
-    }
-}
-
-void Agent::placeObstacle(int x, int y) {
-    // Grid position based on mouse click coordinates
-    int gridX = x / CELL_SIZE;
-    int gridY = y / CELL_SIZE;
-
-    obstacles.push_back(std::make_pair(gridX, gridY));
-
-    // Grid matrix marks the obstacle position in the grid
-    gridMatrix[gridX][gridY] = 1;
+    // Drawing the ojects
+    SDL_Rect agentRect = { x, y, size, size };
+    SDL_RenderCopy(renderer, texture, nullptr, &agentRect);
 }
 
 bool Agent::isObstacle() {
@@ -108,7 +98,26 @@ bool Agent::isObstacle() {
     int gridY = y / CELL_SIZE;
 
     // Check if the current grid position is marked as an obstacle in the gridMatrix
-    return gridMatrix[gridX][gridY] == 1;
+    if (gridMatrix[gridX][gridY] == 1) {
+        // If the current grid position is an obstacle, check the localMatrix for obstacles in the surroundings
+        int** localMatrix = initMatrix();
+
+        // Loop through the localMatrix to check for obstacles
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (localMatrix[i][j] == 1) {
+                    // There is an obstacle in the localMatrix, so this position is obstructed
+                    return true;
+                }
+            }
+        }
+
+        // If there are no obstacles in the localMatrix, the agent is not obstructed
+        return false;
+    }
+
+    // If the current grid position is not an obstacle in the gridMatrix, the agent is not obstructed
+    return false;
 }
 
 int** Agent::initMatrix() {
@@ -124,6 +133,14 @@ int** Agent::initMatrix() {
     }
 
     return localMatrix;
+}
+
+int* Agent::getX() {
+    return &x;
+}
+
+int* Agent::getY() {
+    return &y;
 }
 
 void drawGrid(SDL_Renderer* renderer) {
@@ -142,7 +159,38 @@ void drawGrid(SDL_Renderer* renderer) {
     }
 }
 
-void handleEvents(SDL_Event& e, Agent& object1, Agent& object2, bool& quit) {
+void drawObstacles(SDL_Renderer* renderer, std::vector<std::pair<int, int>>& obstacles, int size, int gridMatrix[][GRID_SIZE]) {
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+
+    for (const auto& obstacle : obstacles) {
+        int obstacleX = obstacle.first * size;
+        int obstacleY = obstacle.second * size;
+        SDL_Rect obstacleRect = { obstacleX, obstacleY, size, size };
+        SDL_RenderFillRect(renderer, &obstacleRect);
+
+        // Mark the obstacle positions in gridMatrix
+        int gridX = obstacleX / size;
+        int gridY = obstacleY / size;
+        // Updates the matrix
+        gridMatrix[gridX][gridY] = 1;
+    }
+}
+
+void handleMouseClick(SDL_Event& e, std::vector<std::pair<int, int>>& obstacles) {
+    if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_LEFT) {
+        int mouseX = e.button.x;
+        int mouseY = e.button.y;
+
+        // Grid position based on mouse click coordinates
+        int gridX = mouseX / CELL_SIZE;
+        int gridY = mouseY / CELL_SIZE;
+
+        obstacles.push_back(std::make_pair(gridX, gridY));
+    }
+}
+
+
+void handleEvents(SDL_Event& e, std::vector<std::pair<int, int>>& obstacles, Agent& object1, Agent& object2, bool& quit) {
     while (SDL_PollEvent(&e) != 0) {
         if (e.type == SDL_QUIT) {
             quit = true;
@@ -157,24 +205,7 @@ void handleEvents(SDL_Event& e, Agent& object1, Agent& object2, bool& quit) {
             }
         }
         else if (e.type == SDL_MOUSEBUTTONDOWN) {
-            if (e.button.button == SDL_BUTTON_LEFT) {
-                // Place an obstacle at the mouse click position
-                object1.placeObstacle(e.button.x, e.button.y);
-            }
-        }
-    }
-}
-
-void moveAgent(Agent& agent, const double moveInterval, std::atomic<bool>& quit) {
-    auto lastMoveTime = std::chrono::high_resolution_clock::now();
-
-    while (!quit) {
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        double elapsedSeconds = std::chrono::duration<double>(currentTime - lastMoveTime).count();
-
-        if (elapsedSeconds >= moveInterval) {
-            agent.move();
-            lastMoveTime = currentTime;
+            handleMouseClick(e, obstacles);
         }
     }
 }
@@ -187,40 +218,33 @@ void runProgram() {
     if (!IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG) {
         std::cout << "Failed to initialize image" << IMG_GetError() <<std::endl;
     }
-
+    std::vector<std::pair<int, int>> obstacles; 
     bool quit = false;  
     SDL_Event e;
 
     srand(static_cast<unsigned>(time(nullptr)));
 
     // Specifies the initial positions for object1 and object2
-    int initialX1 = 100;
-    int initialY1 = 100;
-    int initialX2 = 200;
-    int initialY2 = 200;
+    int initialX1 = (rand() % 2 + 1) * 100;
+    int initialY1 = (rand() % 2 + 1) * 100;
+    int initialX2 = (rand() % 3 + 1) * 100;
+    int initialY2 = (rand() % 3 + 1) * 100;
 
     Agent object1(renderer, CELL_SIZE, GRID_SIZE, initialX1, initialY1, "images/agente1.png"); // Load agent1.png
     Agent object2(renderer, CELL_SIZE, GRID_SIZE, initialX2, initialY2, "images/agente2.png"); // Load agent2.png
 
-    std::atomic<bool> quitThreads(false);
-
     auto lastMoveTime = std::chrono::high_resolution_clock::now();
-    const double moveInterval = 0.1; // Move every [amount] of seconds
-
-    // Different threads for each object
-
-    std::thread thread1(&Agent::move, std::ref(object1));
-    std::thread thread2(&Agent::move, std::ref(object2));
+    const double moveInterval = 0.1; // Move every [amount] of secondsss
 
     while (!quit) {
-        handleEvents(e, object1, object2, quit); // A classic one 
+        handleEvents(e, obstacles, object1, object2, quit);
 
         auto currentTime = std::chrono::high_resolution_clock::now();
         double elapsedSeconds = std::chrono::duration<double>(currentTime - lastMoveTime).count();
 
         if (elapsedSeconds >= moveInterval) {
-            object1.move();
-            object2.move();
+            object1.move(gridMatrix);
+            object2.move(gridMatrix);
             lastMoveTime = currentTime;
         }
 
@@ -229,6 +253,9 @@ void runProgram() {
 
         drawGrid(renderer); // Draw the grid
 
+        // Draw obstacles
+        drawObstacles(renderer, obstacles, CELL_SIZE, gridMatrix);
+
         object1.draw();
         object2.draw();
 
@@ -236,10 +263,6 @@ void runProgram() {
 
         SDL_Delay(10);
     }
-
-    quitThreads = true;
-    thread1.join();
-    thread2.join();
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
