@@ -19,19 +19,33 @@ const int CELL_SIZE = SCREEN_WIDTH / GRID_SIZE;
 class Agent {
 public:
     Agent(SDL_Renderer* renderer, int size, int gridSize, int initialX, int initialY, const std::string& imagePath);
+    ~Agent();
     bool isObstacle();
-    bool isSample();
+    bool isSample(int gridMatrix[][GRID_SIZE]);
+    bool gotSample();
   
     void move(int gridMatrix[][GRID_SIZE]);
+    void moveTowardsShip(int shipX, int shipY, int gridMatrix[][GRID_SIZE]);
     void stopMoving();
-    void draw();   
+
+    void draw();
+
+    void pickSample(std::vector<std::pair<int, int>>& activeSamples, std::vector<std::pair<int, int>>& samples, int gridMatrix[][GRID_SIZE]);
+    void dropSample();
 
     int** initMatrix();
-    int* getX();
-    int* getY();
+
+    void freeMatrix(int** matrix);
+
+    int getX();
+    int getY();
+
+    std::vector<std::pair<int, int>>& getActiveSamples();
+
 
 private:
     std::vector<std::pair<int, int>> obstacles;
+    std::vector<std::pair<int, int>> activeSamples;
 
     SDL_Renderer* renderer;
     SDL_Texture* texture;
@@ -39,7 +53,7 @@ private:
 
     bool isMoving;
     // Counter of the samples recovered by the agents
-    bool hasObject = false;
+    bool hasSample = false;
     // Positions
     int x, y;
     // Directions (movement)
@@ -51,7 +65,24 @@ private:
    
 };
 
+class Ship {
+public:
+    Ship(SDL_Renderer* renderer, int size, int initialX, int initialY, const std::string& imagePath);
+    ~Ship();
+
+    void draw();
+private:
+    SDL_Renderer* renderer;
+    SDL_Texture* texture;
+
+    int x, y;
+    int size;
+};
+
 void drawObstacles(SDL_Renderer* renderer, const std::vector<std::pair<int, int>>& obstacles, int size, int gridMatrix[][GRID_SIZE]);
+void initializeSamples(std::vector<std::pair<int, int>>& samples, int numSamples);
+void drawSamples(SDL_Renderer* renderer, std::vector<std::pair<int, int>>& samples, int size, int x, int y, int gridMatrix[][GRID_SIZE]);
+
 void handleEvents(SDL_Event& e, std::vector<std::pair<int, int>>& obstacles, Agent& object1, Agent& object2, bool& quit);
-void handleMouseClick(SDL_Event& e, std::vector<std::pair<int, int>>& obstacles);
+void handleMouseClick(SDL_Event& e, std::vector<std::pair<int, int>>& obstacles, const std::vector<std::pair<int, int>>& samples);
 void runProgram();
