@@ -12,8 +12,8 @@ Agent::Agent(SDL_Renderer* renderer, int size, int gridSize, int initialX, int i
     dy = (rand() % 3 - 1) * CELL_SIZE;
     isMoving = false;
 
-    for (int i = 0; i < 16; i++) {
-        for (int j = 0; j < 16; j++) {
+    for (int i = 0; i < GRID_SIZE; i++) {
+        for (int j = 0; j < GRID_SIZE; j++) {
             gridMatrix[i][j] = 0;
         }
     }
@@ -32,6 +32,11 @@ Agent::~Agent() {
     if (texture != nullptr) {
         SDL_DestroyTexture(texture);
         texture = nullptr;
+    }
+
+    for (int i = 0; i < 3; i++) {
+        delete localMatrix[i];
+        localMatrix[i] = nullptr;
     }
 }
 
@@ -204,7 +209,6 @@ std::vector<std::pair<int, int>>& Agent::getActiveSamples() {
 
 int** Agent::initMatrix() {
     // Local matrix that tracks the current position of a given object in the 16x16 grid
-    int** localMatrix = new int* [3];
 
     for (int i = 0; i < 3; i++) {
         localMatrix[i] = new int[3];
@@ -493,7 +497,7 @@ void runProgram() {
         drawSamples(renderer, samples, CELL_SIZE);
 
         ship.draw();
-
+        
         object1.draw();
         object2.draw();
 
