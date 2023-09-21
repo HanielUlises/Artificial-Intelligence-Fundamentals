@@ -35,8 +35,6 @@ public:
 
     int** initMatrix();
 
-    void freeMatrix(int** matrix);
-
     int getX();
     int getY();
 
@@ -50,7 +48,7 @@ private:
     SDL_Renderer* renderer;
     SDL_Texture* texture;
 
-
+    int** localMatrix = new int* [3];
     bool isMoving;
     // Counter of the samples recovered by the agents
     bool hasSample = false;
