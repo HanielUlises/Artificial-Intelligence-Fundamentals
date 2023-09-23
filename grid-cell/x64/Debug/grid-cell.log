@@ -1,3 +1,0 @@
-﻿  agent.cpp
-C:\Users\polom\Artificial-Intelligence-Fundamentals\grid-cell\agent.cpp(178,35): warning C4806: '&': unsafe operation: no value of type 'bool' promoted to type 'IMG_InitFlags' can equal the given constant
-  grid-cell.vcxproj -> C:\Users\polom\Artificial-Intelligence-Fundamentals\grid-cell\x64\Debug\grid-cell.exe

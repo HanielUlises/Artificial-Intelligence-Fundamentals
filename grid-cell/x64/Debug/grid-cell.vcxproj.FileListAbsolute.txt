@@ -1,2 +1,0 @@
-C:\Users\polom\Desktop\Proyectos\C++\Maze\grid-cell\x64\Debug\grid-cell.exe
-C:\Users\polom\Artificial-Intelligence-Fundamentals\grid-cell\x64\Debug\grid-cell.exe
