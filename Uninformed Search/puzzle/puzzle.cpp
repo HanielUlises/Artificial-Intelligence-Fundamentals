@@ -108,8 +108,10 @@ void Board::MoveEmptySpace(Direction direction) {
         newCol = emptyCol + 1;
     }
 
-    // Swap the positions of the empty tile and the selected tile
+    // Swaps the positions of the empty tile and the selected tile
     std::swap(puzzleState[emptyRow][emptyCol], puzzleState[newRow][newCol]);
+    emptyRow = newRow;
+    emptyCol = newCol;
 }
 
 void Board::Draw(SDL_Renderer* renderer) {
@@ -119,11 +121,13 @@ void Board::Draw(SDL_Renderer* renderer) {
     for (int i = 0; i < PUZZLE_ROWS; ++i) {
         for (int j = 0; j < PUZZLE_COLS; ++j) {
             int tileID = puzzleState[i][j];
-            SDL_Texture* tileTexture = puzzleTiles[i][j];
 
-            // Destination rectangle for each tile
-            SDL_Rect destRect = { j * tileWidth, i * tileHeight, tileWidth, tileHeight };
-            SDL_RenderCopy(renderer, tileTexture, nullptr, &destRect);
+            if (tileID != 0) {
+                SDL_Texture* tileTexture = puzzleTiles[tileID / PUZZLE_COLS][tileID % PUZZLE_COLS];
+
+                SDL_Rect destRect = { j * tileWidth, i * tileHeight, tileWidth, tileHeight };
+                SDL_RenderCopy(renderer, tileTexture, nullptr, &destRect);
+            }
         }
     }
 }
@@ -148,7 +152,10 @@ void handleEvents(SDL_Event& e, bool& quit, Board& board) {
             case SDLK_RIGHT:
                 board.MoveEmptySpace(Board::Direction::RIGHT);
                 break;
+            case SDLK_ESCAPE:
+                quit = true;
             }
+            
         }
     }
 }
