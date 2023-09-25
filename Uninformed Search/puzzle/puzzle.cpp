@@ -15,7 +15,7 @@ Board::Board(SDL_Renderer* renderer, const std::string& imagePath) {
         texture = SDL_CreateTextureFromSurface(renderer, imageSurface);
         SDL_FreeSurface(imageSurface);
 
-        int pieceWidth = imageSurface->w / 4; // Assuming a 4x4 puzzle
+        int pieceWidth = imageSurface->w / 4; // 4x4 puzzle aka 15-puzzle
         int pieceHeight = imageSurface->h / 4;
 
         for (int i = 0; i < PUZZLE_ROWS; ++i) {
