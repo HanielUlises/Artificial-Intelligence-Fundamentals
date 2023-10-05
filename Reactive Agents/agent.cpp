@@ -178,22 +178,31 @@ void Agent::pickSample(std::vector<std::pair<int, int>>& activeSamples, std::vec
         int gridX = x / CELL_SIZE;
         int gridY = y / CELL_SIZE;
 
-        // Check if there is a sample at the agent's current position
-        for (auto it = samples.begin(); it != samples.end(); ++it) {
-            if (it->first == gridX && it->second == gridY) {
-                // Remove the sample from the samples vector
-                samples.erase(it);
+        // This code removes elements from the 'samples' vector that meet a specific condition.
 
-                // Update the gridMatrix to indicate the sample is no longer there
-                gridMatrix[gridX][gridY] = 0;
+        // It utilizes the std::remove_if algorithm to facilitate this task.
+        // std::remove_if rearranges the elements within the vector but doesn't remove them at this stage.
+        samples.erase(
+            // The process begins by applying std::remove_if to the 'samples' vector.
+            std::remove_if(
+                samples.begin(),              // It starts iterating from the beginning of the 'samples' vector.
+                samples.end(),                // It stops at the one-past-the-end position of the 'samples' vector.
+                [&](const std::pair<int, int>& sample) {
+                    // A lambda function is defined here to check if each 'sample' meets the removal condition.
+                    // The lambda captures 'gridX' and 'gridY' from the surrounding scope.
+                    return sample.first == gridX && sample.second == gridY;
+                }
+            ),
+            samples.end()                    // After std::remove_if, the 'samples' vector contains rearranged elements.
+        );
 
-                // Add the sample to the activeSamples vector
-                activeSamples.push_back(std::make_pair(gridX, gridY));
+        // Once std::remove_if has completed rearranging the elements, the erase method is used to actually remove the unwanted ones.
+        // Elements that match the condition (samples at the agent's current position) are permanently removed from the 'samples' vector.
 
-                hasSample = true;
-                break;
-            }
-        }
+        gridMatrix[gridX][gridY] = 0;
+
+        activeSamples.push_back(std::make_pair(gridX, gridY));
+        hasSample = true;
     }
 }
 // When an agent reaches the ship, it places the sample
@@ -431,9 +440,9 @@ void runProgram() {
     Ship ship(renderer, CELL_SIZE, initialXShip, initialYShip, "images/ship.png");
 
     auto lastMoveTime = std::chrono::high_resolution_clock::now();
-    const double moveInterval = 0.1f; // Move every [amount] of seconds
+    const double moveInterval = 0.01f; // Move every [amount] of seconds
 
-    const int numSamples = 40;
+    const int numSamples = 20;
     initializeSamples(samples, numSamples);
 
     while (!quit) {
