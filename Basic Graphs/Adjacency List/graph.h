@@ -21,5 +21,5 @@ private:
 };
 
 class Graph{
-
+    List linkedList
 };
