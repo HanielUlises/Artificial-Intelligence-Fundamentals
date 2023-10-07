@@ -84,7 +84,7 @@ void Agent::move(int gridMatrix[][GRID_SIZE]) {
 }
 
 void Agent::moveTowardsShip(int shipX, int shipY, int gridMatrix[][GRID_SIZE]) {
-    if (!hasSample) {
+    if (!hasSample || !isMoving) {
         return; // Only move towards the ship if the agent has a sample
     }
 
